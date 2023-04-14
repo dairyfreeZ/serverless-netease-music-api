@@ -40,7 +40,7 @@ terraform init
 terraform apply -var="region=us-west-2" -auto-approve
 ```
 
-In AWS Console, crate a Test event with the following payload to trigger the Lambda
+In AWS Console, create a Test event with the following payload to trigger the Lambda
 
 ```
 {
@@ -75,7 +75,7 @@ export ALICLOUD_REGION="cn-beijing"
 terraform apply -auto-approve
 ```
 
-In FC Console, crate a Test event with the following payload to trigger the Lambda
+In FC Console, create a Test event with the following payload to trigger the FC
 
 ```
 {
