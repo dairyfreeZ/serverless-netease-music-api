@@ -2,7 +2,6 @@ package handler
 
 import (
 	"fmt"
-	"net/http"
 
 	"github.com/dairyfreeZ/serverless-netease-music-api/sdk/pkg/request"
 
@@ -21,7 +20,6 @@ type HandlerArgs struct {
 }
 
 type Handler struct {
-	header http.Header
 }
 
 func NewHandler() *Handler {

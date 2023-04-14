@@ -55,8 +55,42 @@ In AWS Console, crate a Test event with the following payload to trigger the Lam
 echo -n "your_human_readable_password" | md5
 ```
 
+### 部署到阿里云函数
+Build Code
+```
+cd configuration/fc/entry
+./release.sh
+```
 
-Integration Instructions  
+安装并配置阿里云[CLI](https://help.aliyun.com/product/29991.html)
+
+Deploy the binary to FC
+```
+cd ../terraform
+terraform init
+
+export ALICLOUD_ACCESS_KEY="anaccesskey"
+export ALICLOUD_SECRET_KEY="asecretkey"
+export ALICLOUD_REGION="cn-beijing"
+terraform apply -auto-approve
+```
+
+In FC Console, crate a Test event with the following payload to trigger the Lambda
+
+```
+{
+  "username": "foo@bar.com",
+  "password": "fc5e038d38a57032085441e7fe7010b0"
+}
+```
+`username`: 登陆邮箱
+
+`password`: md5-encoded密码，macOS可通过如下command获得
+```
+echo -n "your_human_readable_password" | md5
+```
+
+## Integration Instructions  
 - 用其它AWS services定时trigger lambda
 - 可与API Gateway结合，用HTTP request trigger Lambda
 
