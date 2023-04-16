@@ -3,10 +3,13 @@ package request
 import (
 	"encoding/json"
 	"fmt"
+	"math"
+	"math/rand"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/dairyfreeZ/serverless-netease-music-api/sdk/pkg/secret"
 
@@ -18,6 +21,9 @@ const (
 		"cf780b396507a3f7464e8a60f4bbc019437993166e004087dd32d1490298caf655c2353e58daa0bc13cc7d5c198250" +
 		"968580b12c1b8817e3f5c807e650dd04abd3fb8130b7ae43fcc5b"
 	endpoint = "https://music.163.com"
+
+	maxRetryAttempts = 3
+	baseBackoffTime  = 500 * time.Millisecond
 )
 
 type NMClient struct {
@@ -106,14 +112,33 @@ func (nmc *NMClient) prepare(bodyMap map[string]interface{}) (string, error) {
 }
 
 func (nmc *NMClient) send(req *http.Request) (string, error) {
-	rsp, err := nmc.client.Do(req)
-	if err != nil {
-		return "", fmt.Errorf("failed to make request: %w", err)
-	}
-	defer rsp.Body.Close()
+	retryAttempt := 0
+	for {
+		rsp, err := nmc.client.Do(req)
+		if err != nil {
+			return "", fmt.Errorf("failed to make request: %w", err)
+		}
+		defer rsp.Body.Close()
 
-	log.Infof("Status Code: %v", rsp.StatusCode)
-	return "OK", nil
+		log.Infof("Status Code: %v", rsp.StatusCode)
+		codeType := rsp.StatusCode / 100
+		if codeType == 2 {
+			return "OK", nil
+		}
+		if codeType == 4 {
+			return "", fmt.Errorf("received 4xx error from NM server: %d", rsp.StatusCode)
+		}
+
+		// Backoff and retry for 5xx.
+		retryAttempt++
+		if retryAttempt > maxRetryAttempts {
+			return "", fmt.Errorf("an internal error from NM server: %d", rsp.StatusCode)
+		}
+		log.Warn("Request failed with %d, retry_attempt=%d, max_attempts=%d", rsp.StatusCode, retryAttempt, maxRetryAttempts)
+		backoffTime := time.Duration(float64(baseBackoffTime) * math.Pow(2, float64(retryAttempt)))
+		jitter := time.Duration(rand.Int63n(int64(backoffTime/2))) - backoffTime/4
+		time.Sleep(backoffTime + jitter)
+	}
 }
 
 func parseCookies(rawCookies []string) []*http.Cookie {
