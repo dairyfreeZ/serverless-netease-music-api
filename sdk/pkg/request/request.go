@@ -3,6 +3,7 @@ package request
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"math"
 	"math/rand"
 	"net/http"
@@ -64,18 +65,36 @@ func NewNMClient(cookies []string) (*NMClient, error) {
 	}
 	client.Jar.SetCookies(parsedUrl, parseCookies(cookies))
 
+	ip := publicIP()
 	nmc := &NMClient{
 		client: client,
 		header: http.Header{
 			"User-Agent":      []string{"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_6) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.1.2 Safari/605.1.15"},
 			"Content-Type":    []string{"application/x-www-form-urlencoded"},
 			"Referer":         []string{"https://music.163.com"},
-			"X-Real-IP":       []string{"::1"},
-			"X-Forwarded-For": []string{"::1"},
+			"X-Real-IP":       []string{ip},
+			"X-Forwarded-For": []string{ip},
 		},
 		csrf: csrf,
 	}
 	return nmc, nil
+}
+
+func publicIP() string {
+	resp, err := http.Get("https://api.ipify.org")
+	if err != nil {
+		log.Warn(err)
+		return "::1"
+	}
+	defer resp.Body.Close()
+
+	ip, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Warn(err)
+		return "::1"
+	}
+
+	return string(ip)
 }
 
 // POST.
