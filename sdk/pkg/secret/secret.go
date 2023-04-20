@@ -25,7 +25,6 @@ const (
 // EncryptJSONBytes encrypts provided request.
 func EncryptRequest(data []byte) (string, error) {
 	secret := randHexStr(16)
-	// secret := []byte("5acd93cd67eb489c")
 
 	params, err := aesEncrypt(data, []byte(nonce))
 	if err != nil {
@@ -99,4 +98,9 @@ func randHexStr(size int) []byte {
 // HexStr32 returns random hex string of length 32.
 func HexStr32() string {
 	return string(randHexStr(32))
+}
+
+// HexStr4 returns random hex string of length 4.
+func HexStr8() string {
+	return string(randHexStr(8))
 }

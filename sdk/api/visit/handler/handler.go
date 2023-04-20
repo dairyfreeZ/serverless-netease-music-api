@@ -11,13 +11,13 @@ import (
 
 const (
 	loginPath  = "weapi/login"
-	signinPath = "weapi/point/dailyTask"
 	typeMobile = 0
 )
 
 type HandlerArgs struct {
 	Username string
 	Password string
+	Path     string
 	State    State
 	IP       string
 }
@@ -34,11 +34,11 @@ func NewHandler() *Handler {
 	return &Handler{}
 }
 
-func (h *Handler) Run(args HandlerArgs) error {
+func (h *Handler) Run(args HandlerArgs) (string, error) {
 	// Set up client.
 	client, err := request.NewNMClient(args.State.Location, args.State.Region, args.IP)
 	if err != nil {
-		return fmt.Errorf("failed to init client: %w", err)
+		return "", fmt.Errorf("failed to init client: %w", err)
 	}
 
 	// Login.
@@ -51,29 +51,26 @@ func (h *Handler) Run(args HandlerArgs) error {
 		}
 		_, err := client.POST(body, loginPath)
 		if err != nil {
-			return fmt.Errorf("failed to login: %w", err)
+			return "", fmt.Errorf("failed to login: %w", err)
 		}
 		log.Info("Login succeeded.")
 	} else {
 		log.Infof("Cookies are fresh, no login required.")
 	}
 
-	// Sign in.
-	body := map[string]interface{}{
-		"type": typeMobile,
-	}
-	rsp, err := client.POST(body, signinPath)
+	// Visit.
+	detail, err := client.GET(args.Path)
 	if err != nil {
-		return fmt.Errorf("failed to sign in: %w", err)
+		return "", err
 	}
-	log.Infof("Sign in: %s", rsp)
 
+	// Save state.
 	if args.State.Location != "" {
 		log.Infof("Exporting state to: %s", args.State.Location)
 		if err := client.ExportState(args.State.Location, args.State.Region); err != nil {
-			return err
+			return "", err
 		}
 	}
 
-	return nil
+	return detail, nil
 }

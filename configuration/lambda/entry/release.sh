@@ -7,3 +7,4 @@ fi
 mkdir $releaseDir
 
 GOOS=linux GOARCH=amd64 go build -o "${releaseDir}/signin" "signin/main.go"
+GOOS=linux GOARCH=amd64 go build -o "${releaseDir}/visit" "visit/main.go"

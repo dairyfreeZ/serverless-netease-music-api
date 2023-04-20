@@ -14,6 +14,33 @@ Terraform v1.2.3
 AWS CLI 2.7.3
 ```
 
+## 参数说明
+### signin
+```
+{
+  "username": "foo@bar.com", // [required] 登陆邮箱
+  "password": "fc5e038d38a57032085441e7fe7010b0", // [required] 登陆密码，md5 encoded
+  "state": {
+    "location": "s3://bkt", // [optional] 存取state(目前即cookies)的s3 bucket的URI，如未提供或invalid或expired，将根据提供的账号密码重新login
+    "region": "us-west-2" // [optional] s3 bucket的region
+  },
+  "ip": "0.0.0.1" // [optional] 用于header的ip addr
+}
+```
+### visit
+```
+{
+  "username": "foo@bar.com", // [required] 登陆邮箱
+  "password": "fc5e038d38a57032085441e7fe7010b0", // [required] 登陆密码，md5 encoded
+  "state": {
+    "location": "s3://bkt", // [optional] 存取state(cookies)的s3位置，如未提供或invalid或expired，将根据提供的账号密码重新login
+    "region": "us-west-2" // [optional] s3 bucket的region
+  },
+  "ip": "0.0.0.1", // [optional] 用于header的ip addr
+  "path": "#" // [optional] 想要访问的地址，比如"foo"则返回"music.163.com/foo"的内容，不提供即访问主页
+}
+```
+
 ## 使用说明
 ### 获取代码
 ```
@@ -97,7 +124,8 @@ echo -n "your_human_readable_password" | md5
 ## 支持APIs
 - 签到
 
-## 想做的 (!= todo)
--[] Save/Read Cookie and other artifacts to/from a cloud storage
-
--[] Read login info from a more secured place than the plaintext payload
+## 历史
+APR-22 2023
+- 支持aws s3存取state,目前只包括cookies
+- 支持visit api: 在login的状态下访问网页，范围取得的内容
+- 支持自定义header ip值
